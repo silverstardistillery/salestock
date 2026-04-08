@@ -807,28 +807,45 @@
             gap: 1rem;
         }
 
-        @media (max-width: 600px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
+        @media (max-width: 768px) {
             .topbar {
-                padding: 0 1rem;
+                padding: 0 0.75rem;
+                height: auto;
+                min-height: 56px;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding-top: 8px;
+                padding-bottom: 8px;
             }
+            .logo-sub { display: none; }
+            .logo-title { font-size: 15px; letter-spacing: 2px; }
+            .logo-mark { width: 30px; height: 30px; font-size: 12px; }
+            .nav-tabs { order: 3; width: 100%; justify-content: center; }
+            .nav-tab { padding: 6px 10px; font-size: 10px; }
+            .live-badge { font-size: 9px; padding: 3px 8px; }
+            .dash-wrap, .admin-wrap { padding: 0.75rem; }
+            .section-title { font-size: 20px; letter-spacing: 2px; }
+            .stat-value { font-size: 28px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+            .summary-row { grid-template-columns: 1fr; gap: 0.75rem; }
+            .sum-value { font-size: 24px; }
+            .tempo-stat { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; padding: 0.75rem; }
+            .tempo-item .val { font-size: 24px; }
+            .card-title { font-size: 16px; letter-spacing: 1.5px; }
+            .tab-group { gap: 2px; }
+            .atab { padding: 6px 10px; font-size: 11px; }
+            .admin-topbar { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+            td, th { padding: 8px 10px; font-size: 11px; }
+            .form-row { grid-template-columns: 1fr; }
+            .login-box { padding: 2rem 1.25rem; }
+            table { font-size: 11px; }
+        }
 
-            .dash-wrap,
-            .admin-wrap {
-                padding: 1rem;
-            }
-
-            .nav-tab {
-                padding: 6px 12px;
-                font-size: 10px;
-            }
-
-            .logo-title {
-                font-size: 16px;
-            }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .summary-card { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+            .card-header { flex-wrap: wrap; gap: 0.5rem; }
+            .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         }
 
         /* ---- ALERT ---- */
@@ -1695,8 +1712,8 @@
         }
 
         // ===== RENDER DASHBOARD =====
-        function renderDashboard() {
-            const data = loadData();
+        async function renderDashboard() {
+            const data = await loadData();
             const tempo = getTempoNetDeducted(data);
             const perProduct = getTotalsPerProduct(data);
             const totalAdded = getTotalStock(data);
@@ -1735,15 +1752,12 @@
 
             // Stock Balance Table
             const tbody = document.getElementById('stock-balance-tbody');
-            if (PRODUCTS.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-state-title">NO DATA</div></div></td></tr>';
-            } else {
-                let rows = '';
-                PRODUCTS.forEach(p => {
-                    const d = perProduct[p];
-                    const bal = d.added - d.sold;
-                    let tag = bal > 10 ? '<span class="balance-tag tag-ok">OK</span>' : bal > 0 ? '<span class="balance-tag tag-low">LOW</span>' : '<span class="balance-tag tag-out">OUT</span>';
-                    rows += `<tr>
+            let rows = '';
+            PRODUCTS.forEach(p => {
+                const d = perProduct[p];
+                const bal = d.added - d.sold;
+                let tag = bal > 10 ? '<span class="balance-tag tag-ok">OK</span>' : bal > 0 ? '<span class="balance-tag tag-low">LOW</span>' : '<span class="balance-tag tag-out">OUT</span>';
+                rows += `<tr>
           <td class="td-product">${p}</td>
           <td class="td-num td-aqua">${d.added}</td>
           <td class="td-num td-red">${d.sold}</td>
@@ -1751,11 +1765,10 @@
           <td class="td-num td-green">${Math.max(0, bal)}</td>
           <td style="text-align:center">${tag}</td>
         </tr>`;
-                });
-                tbody.innerHTML = rows || '<tr><td colspan="6" class="empty-state"><div class="empty-state-title">NO STOCK</div></td></tr>';
-            }
+            });
+            tbody.innerHTML = rows || '<tr><td colspan="6" class="empty-state"><div class="empty-state-title">NO STOCK</div></td></tr>';
 
-            // Sales Summary
+            // Sales Summary (all-time totals, not filtered)
             let cashTotal = 0, onlineTotal = 0;
             data.sales.forEach(s => {
                 if (s.payment === 'Cash') cashTotal += s.total;
@@ -1764,15 +1777,21 @@
             document.getElementById('dash-total-cash').textContent = fmtMoney(cashTotal);
             document.getElementById('dash-total-online').textContent = fmtMoney(onlineTotal);
 
-            // Sales Table
+            // Sales Table with filter
+            const filterDate = document.getElementById('dash-filter-date').value;
+            const filterProduct = document.getElementById('dash-filter-product').value;
+            let filtered = data.sales;
+            if (filterDate) filtered = filtered.filter(s => s.date === filterDate);
+            if (filterProduct) filtered = filtered.filter(s => s.product === filterProduct);
+
             const salesTbody = document.getElementById('dash-sales-tbody');
-            if (data.sales.length === 0) {
+            if (filtered.length === 0) {
                 salesTbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-state-title">NO SALES YET</div><div class="empty-state-sub">Sales entered from admin will appear here</div></div></td></tr>`;
             } else {
-                let rows = '';
-                data.sales.forEach((s, i) => {
+                let srows = '';
+                filtered.forEach((s, i) => {
                     const payBadge = s.payment === 'Cash' ? '<span class="pay-cash">Cash</span>' : '<span class="pay-online">Online</span>';
-                    rows += `<tr>
+                    srows += `<tr>
           <td style="color:var(--muted);font-family:var(--font-mono);font-size:11px;">${i + 1}</td>
           <td style="font-family:var(--font-mono);font-size:11px;">${fmtDate(s.date)}</td>
           <td style="color:var(--white);">${s.particular}</td>
@@ -1783,24 +1802,28 @@
           <td style="text-align:center;">${payBadge}</td>
         </tr>`;
                 });
-                salesTbody.innerHTML = rows;
+                salesTbody.innerHTML = srows;
             }
         }
 
+        function clearSalesFilters() {
+            document.getElementById('dash-filter-date').value = '';
+            document.getElementById('dash-filter-product').value = '';
+            renderDashboard();
+        }
+
         // ===== RENDER ADMIN =====
-        function renderAdmin() {
-            const data = loadData();
+        async function renderAdmin() {
+            const data = await loadData();
 
             // --- Inventory snapshot ---
             const invTbody = document.getElementById('admin-inv-tbody');
             if (invTbody) {
                 let rows = '';
                 PRODUCTS.forEach(p => {
-                    const d = loadData();
                     let added = 0, sold = 0;
-                    d.stockHistory.forEach(e => { if (e.product === p) added += e.cases; });
-                    d.sales.forEach(e => { if (e.product === p) sold += e.cases; });
-                    const tempo = getTempoNetDeducted(d);
+                    data.stockHistory.forEach(e => { if (e.product === p) added += e.cases; });
+                    data.sales.forEach(e => { if (e.product === p) sold += e.cases; });
                     const balPerProduct = added - sold;
                     const cls = balPerProduct > 10 ? 'td-green' : balPerProduct > 0 ? 'td-amber' : 'td-red';
                     rows += `<tr>
@@ -1818,13 +1841,12 @@
                     shTbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-state-title">NO ENTRIES</div></div></td></tr>`;
                 } else {
                     let rows = '';
-                    [...data.stockHistory].reverse().forEach((e, i) => {
-                        const realIdx = data.stockHistory.length - 1 - i;
+                    [...data.stockHistory].reverse().forEach((e) => {
                         rows += `<tr>
             <td style="font-family:var(--font-mono);font-size:11px;">${fmtDate(e.date)}</td>
             <td class="td-product">${e.product}</td>
             <td class="td-num td-aqua">${e.cases}</td>
-            <td style="text-align:center;"><button class="del-btn" onclick="deleteStock(${realIdx})">x</button></td>
+            <td style="text-align:center;"><button class="del-btn" onclick="deleteStock('${e._id}')">x</button></td>
           </tr>`;
                     });
                     shTbody.innerHTML = rows;
@@ -1838,11 +1860,10 @@
                     asSales.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-state-title">NO SALES</div></div></td></tr>`;
                 } else {
                     let rows = '';
-                    [...data.sales].reverse().forEach((s, i) => {
-                        const realIdx = data.sales.length - 1 - i;
+                    [...data.sales].reverse().forEach((s, idx) => {
                         const payBadge = s.payment === 'Cash' ? '<span class="pay-cash">Cash</span>' : '<span class="pay-online">Online</span>';
                         rows += `<tr>
-            <td style="color:var(--muted);font-family:var(--font-mono);font-size:10px;">${realIdx + 1}</td>
+            <td style="color:var(--muted);font-family:var(--font-mono);font-size:10px;">${idx + 1}</td>
             <td style="font-family:var(--font-mono);font-size:11px;">${fmtDate(s.date)}</td>
             <td>${s.particular}</td>
             <td style="font-size:11px;color:var(--muted);">${s.product}</td>
@@ -1850,7 +1871,7 @@
             <td class="td-num" style="color:var(--muted);">${fmtMoney(s.rate)}</td>
             <td class="td-num td-green">${fmtMoney(s.total)}</td>
             <td style="text-align:center;">${payBadge}</td>
-            <td style="text-align:center;"><button class="del-btn" onclick="deleteSale(${realIdx})">x</button></td>
+            <td style="text-align:center;"><button class="del-btn" onclick="deleteSale('${s._id}')">x</button></td>
           </tr>`;
                     });
                     asSales.innerHTML = rows;
@@ -1875,8 +1896,7 @@
                     atTbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-state-title">NO TEMPO LOGS</div></div></td></tr>`;
                 } else {
                     let rows = '';
-                    [...data.tempoLogs].reverse().forEach((e, i) => {
-                        const realIdx = data.tempoLogs.length - 1 - i;
+                    [...data.tempoLogs].reverse().forEach((e) => {
                         const net = e.loaded - e.returned;
                         rows += `<tr>
             <td style="font-family:var(--font-mono);font-size:11px;">${fmtDate(e.date)}</td>
@@ -1884,7 +1904,7 @@
             <td class="td-num td-red">${e.sold}</td>
             <td class="td-num td-green">${e.returned}</td>
             <td class="td-num" style="color:var(--muted);">${net}</td>
-            <td style="text-align:center;"><button class="del-btn" onclick="deleteTempo(${realIdx})">x</button></td>
+            <td style="text-align:center;"><button class="del-btn" onclick="deleteTempo('${e._id}')">x</button></td>
           </tr>`;
                     });
                     atTbody.innerHTML = rows;
@@ -1949,7 +1969,7 @@
             showAlert(alertEl, 'success', `Added ${cases} cases of ${product}.`);
             document.getElementById('stock-product').value = '';
             document.getElementById('stock-cases').value = '';
-            renderAdmin();
+            await renderAdmin();
         }
 
         // ===== ADD SALE =====
@@ -1979,7 +1999,7 @@
             showAlert(alertEl, 'success', `Sale recorded: ${cases} cases of ${product} for ${fmtMoney(total)}`);
             ['sale-date', 'sale-particular', 'sale-product', 'sale-cases', 'sale-rate', 'sale-payment'].forEach(id => { document.getElementById(id).value = ''; });
             document.getElementById('sale-total-display').textContent = 'Rs. 0.00';
-            renderAdmin();
+            await renderAdmin();
         }
 
         // ===== ADD TEMPO =====
@@ -2000,13 +2020,13 @@
             document.getElementById('tempo-loaded').value = '';
             document.getElementById('tempo-sold').value = '0';
             document.getElementById('tempo-returned').value = '0';
-            renderAdmin();
+            await renderAdmin();
         }
 
         // ===== DELETE =====
-        async function deleteStock(id) { if (!confirm('Delete this stock entry?')) return; await deleteDocFb('stockHistory', id); renderAdmin(); }
-        async function deleteSale(id) { if (!confirm('Delete this sale entry?')) return; await deleteDocFb('sales', id); renderAdmin(); }
-        async function deleteTempo(id) { if (!confirm('Delete this tempo entry?')) return; await deleteDocFb('tempoLogs', id); renderAdmin(); }
+        async function deleteStock(id) { if (!confirm('Delete this stock entry?')) return; await deleteDocFb('stockHistory', id); await renderAdmin(); }
+        async function deleteSale(id) { if (!confirm('Delete this sale entry?')) return; await deleteDocFb('sales', id); await renderAdmin(); }
+        async function deleteTempo(id) { if (!confirm('Delete this tempo entry?')) return; await deleteDocFb('tempoLogs', id); await renderAdmin(); }
 
         async function clearAllData() {
             if (!confirm('WARNING: This will permanently delete ALL data. Continue?')) return;
@@ -2033,6 +2053,11 @@
         // ===== INIT =====
         window.addEventListener('DOMContentLoaded', async () => {
             setDefaultDates();
+            await renderDashboard();
+        });
+
+        // Also re-render if firebase loads after DOMContentLoaded
+        window.addEventListener('firebase-ready', async () => {
             await renderDashboard();
         });
     </script>
