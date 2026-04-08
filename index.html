@@ -1,0 +1,2041 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRATA AQUA – Live Stock Management</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&family=Syne:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, setDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAi3-3ti_0entwJVeQyYdYWU3G_mOIRgY4",
+            authDomain: "sale-stock-53a2f.firebaseapp.com",
+            projectId: "sale-stock-53a2f",
+            storageBucket: "sale-stock-53a2f.firebasestorage.app",
+            messagingSenderId: "692134719546",
+            appId: "1:692134719546:web:0f8c639d8a00ea2f6ec503"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window._db = db;
+        window._fbReady = true;
+        window._fs = { collection, getDocs, addDoc, deleteDoc, doc, setDoc, onSnapshot, query, orderBy };
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
+    <style>
+        :root {
+            --navy: #F0F6FF;
+            --navy-2: #E6EEF8;
+            --navy-3: #D6E4F5;
+            --aqua: #1A7FD4;
+            --aqua-dim: #1565B0;
+            --aqua-glow: rgba(26, 127, 212, 0.15);
+            --aqua-glow2: rgba(26, 127, 212, 0.07);
+            --white: #1A2535;
+            --muted: #6B82A0;
+            --muted2: #B0C4D8;
+            --green: #0A8A5C;
+            --red: #D63030;
+            --amber: #C07800;
+            --card: rgba(255, 255, 255, 0.92);
+            --border: rgba(26, 127, 212, 0.18);
+            --border2: rgba(26, 127, 212, 0.09);
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'DM Mono', monospace;
+            --shadow: 0 2px 16px rgba(26, 127, 212, 0.10);
+            --shadow-md: 0 4px 24px rgba(26, 127, 212, 0.13);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: #EAF1FA;
+            color: var(--white);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse 70% 40% at 10% 0%, rgba(26, 127, 212, 0.09) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 30% at 90% 100%, rgba(26, 127, 212, 0.06) 0%, transparent 55%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        #app {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ---- TOP NAV ---- */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            height: 64px;
+            background: rgba(255, 255, 255, 0.97);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 12px rgba(26, 127, 212, 0.08);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-mark {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #1A7FD4, #1254A0);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 14px;
+            color: #fff;
+            font-weight: 800;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 10px rgba(26, 127, 212, 0.35);
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1;
+        }
+
+        .logo-title {
+            font-family: var(--font-display);
+            font-size: 20px;
+            letter-spacing: 3px;
+            color: var(--aqua);
+        }
+
+        .logo-sub {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            color: var(--muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            background: #EAF1FA;
+            border-radius: 10px;
+            padding: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .nav-tab {
+            font-family: var(--font-body);
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            padding: 7px 20px;
+            border-radius: 7px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            transition: all 0.22s;
+            font-weight: 600;
+        }
+
+        .nav-tab.active {
+            background: var(--aqua);
+            color: #fff;
+            box-shadow: 0 2px 10px rgba(26, 127, 212, 0.28);
+        }
+
+        .nav-tab:hover:not(.active) {
+            color: var(--aqua);
+            background: rgba(26, 127, 212, 0.08);
+        }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: #0A8A5C;
+            letter-spacing: 1px;
+            background: rgba(10, 138, 92, 0.08);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(10, 138, 92, 0.2);
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            background: #0A8A5C;
+            border-radius: 50%;
+            animation: pulse-live 1.8s ease infinite;
+            box-shadow: 0 0 6px rgba(10, 138, 92, 0.5);
+        }
+
+        @keyframes pulse-live {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.75);
+            }
+        }
+
+        /* ---- PANELS ---- */
+        .panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* ---- DASHBOARD LAYOUT ---- */
+        .dash-wrap {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 28px;
+            letter-spacing: 4px;
+            color: var(--aqua);
+            margin-bottom: 0.25rem;
+        }
+
+        .section-sub {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ---- STAT CARDS ---- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.25s, transform 0.2s;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--aqua), #5BB3EE);
+            opacity: 0.9;
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            letter-spacing: 2px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 36px;
+            color: var(--white);
+            letter-spacing: 2px;
+            line-height: 1;
+        }
+
+        .stat-unit {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 0.25rem;
+            letter-spacing: 1px;
+        }
+
+        .stat-card.green .stat-value {
+            color: var(--green);
+        }
+
+        .stat-card.aqua .stat-value {
+            color: var(--aqua);
+        }
+
+        .stat-card.amber .stat-value {
+            color: var(--amber);
+        }
+
+        .stat-card.red .stat-value {
+            color: var(--red);
+        }
+
+        /* ---- STOCK BALANCE TABLE ---- */
+        .card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            padding: 1.1rem 1.5rem;
+            border-bottom: 1px solid var(--border2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(26, 127, 212, 0.04);
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 20px;
+            letter-spacing: 3px;
+            color: var(--aqua);
+        }
+
+        .card-badge {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 1px solid;
+        }
+
+        .badge-green {
+            border-color: var(--green);
+            color: var(--green);
+            background: rgba(0, 229, 160, 0.08);
+        }
+
+        .badge-aqua {
+            border-color: var(--aqua);
+            color: var(--aqua);
+            background: rgba(0, 200, 232, 0.08);
+        }
+
+        .badge-amber {
+            border-color: var(--amber);
+            color: var(--amber);
+            background: rgba(255, 184, 48, 0.08);
+        }
+
+        .tbl-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            font-size: 13px;
+        }
+
+        thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+            background: #F0F6FF;
+            border-bottom: 1px solid var(--border2);
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border2);
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover {
+            background: rgba(26, 127, 212, 0.04);
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        td {
+            padding: 11px 16px;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .td-product {
+            font-weight: 500;
+            color: var(--white);
+            font-size: 12px;
+        }
+
+        .td-num {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .td-green {
+            color: var(--green);
+        }
+
+        .td-red {
+            color: var(--red);
+        }
+
+        .td-aqua {
+            color: var(--aqua);
+        }
+
+        .td-amber {
+            color: var(--amber);
+        }
+
+        .balance-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .tag-ok {
+            background: rgba(0, 229, 160, 0.12);
+            color: var(--green);
+            border: 1px solid rgba(0, 229, 160, 0.3);
+        }
+
+        .tag-low {
+            background: rgba(255, 184, 48, 0.12);
+            color: var(--amber);
+            border: 1px solid rgba(255, 184, 48, 0.3);
+        }
+
+        .tag-out {
+            background: rgba(255, 80, 103, 0.12);
+            color: var(--red);
+            border: 1px solid rgba(255, 80, 103, 0.3);
+        }
+
+        /* ---- PAYMENT BADGES ---- */
+        .pay-cash {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            background: rgba(0, 229, 160, 0.15);
+            color: var(--green);
+            border: 1px solid rgba(0, 229, 160, 0.3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .pay-online {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            background: rgba(0, 200, 232, 0.15);
+            color: var(--aqua);
+            border: 1px solid rgba(0, 200, 232, 0.3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* ---- SUMMARY ROW ---- */
+        .summary-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            border-radius: 14px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .summary-cash {
+            background: linear-gradient(135deg, rgba(0, 229, 160, 0.12), rgba(0, 229, 160, 0.04));
+            border: 1px solid rgba(0, 229, 160, 0.25);
+        }
+
+        .summary-online {
+            background: linear-gradient(135deg, rgba(0, 200, 232, 0.12), rgba(0, 200, 232, 0.04));
+            border: 1px solid rgba(0, 200, 232, 0.25);
+        }
+
+        .sum-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .sum-label.green {
+            color: var(--green);
+        }
+
+        .sum-label.aqua {
+            color: var(--aqua);
+        }
+
+        .sum-value {
+            font-family: var(--font-display);
+            font-size: 32px;
+            letter-spacing: 2px;
+        }
+
+        .sum-value.green {
+            color: var(--green);
+        }
+
+        .sum-value.aqua {
+            color: var(--aqua);
+        }
+
+        .sum-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .sum-icon.green {
+            background: rgba(0, 229, 160, 0.15);
+            color: var(--green);
+            border: 1px solid rgba(0, 229, 160, 0.3);
+        }
+
+        .sum-icon.aqua {
+            background: rgba(0, 200, 232, 0.15);
+            color: var(--aqua);
+            border: 1px solid rgba(0, 200, 232, 0.3);
+        }
+
+        /* ---- ADMIN LOGIN ---- */
+        .login-wrap {
+            min-height: calc(100vh - 64px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-box {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--aqua), transparent);
+        }
+
+        .login-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #1A7FD4, #1254A0);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 4px 20px rgba(26, 127, 212, 0.35);
+            font-family: var(--font-display);
+            font-size: 18px;
+            color: #fff;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .login-title {
+            font-family: var(--font-display);
+            font-size: 28px;
+            letter-spacing: 4px;
+            color: var(--aqua);
+            margin-bottom: 0.5rem;
+        }
+
+        .login-sub {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: 2px;
+            margin-bottom: 2rem;
+        }
+
+        /* ---- FORMS ---- */
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            background: #F7FBFF;
+            border: 1px solid #C5D8EE;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--white);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.22s, box-shadow 0.22s;
+            -webkit-appearance: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--aqua);
+            box-shadow: 0 0 0 3px rgba(26, 127, 212, 0.12);
+            background: #fff;
+        }
+
+        .form-control option {
+            background: #fff;
+            color: var(--white);
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 13px;
+            letter-spacing: 0.3px;
+            text-transform: none;
+            font-weight: 600;
+            transition: all 0.22s;
+        }
+
+        .btn-primary {
+            background: var(--aqua);
+            color: #fff;
+            box-shadow: 0 2px 10px rgba(26, 127, 212, 0.28);
+        }
+
+        .btn-primary:hover {
+            background: #1565B0;
+            box-shadow: 0 4px 16px rgba(26, 127, 212, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #C5D8EE;
+            color: var(--muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--aqua);
+            color: var(--aqua);
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn-danger {
+            background: rgba(214, 48, 48, 0.08);
+            border: 1px solid rgba(214, 48, 48, 0.25);
+            color: var(--red);
+        }
+
+        .btn-danger:hover {
+            background: rgba(214, 48, 48, 0.15);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 9px;
+        }
+
+        .error-msg {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--red);
+            margin-top: 0.5rem;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        /* ---- ADMIN LAYOUT ---- */
+        .admin-wrap {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-grid.full {
+            grid-template-columns: 1fr;
+        }
+
+        @media (max-width: 900px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                padding: 0 1rem;
+            }
+
+            .dash-wrap,
+            .admin-wrap {
+                padding: 1rem;
+            }
+
+            .nav-tab {
+                padding: 6px 12px;
+                font-size: 10px;
+            }
+
+            .logo-title {
+                font-size: 16px;
+            }
+        }
+
+        /* ---- ALERT ---- */
+        .alert {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: rgba(0, 229, 160, 0.12);
+            border: 1px solid rgba(0, 229, 160, 0.3);
+            color: var(--green);
+        }
+
+        .alert-error {
+            background: rgba(255, 80, 103, 0.12);
+            border: 1px solid rgba(255, 80, 103, 0.3);
+            color: var(--red);
+        }
+
+        /* ---- TEMPO STATUS ---- */
+        .tempo-stat {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .tempo-item {
+            text-align: center;
+            padding: 1rem;
+            background: #F0F6FF;
+            border-radius: 10px;
+            border: 1px solid var(--border2);
+        }
+
+        .tempo-item .val {
+            font-family: var(--font-display);
+            font-size: 32px;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+
+        .tempo-item .lbl {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        /* ---- EMPTY STATE ---- */
+        .empty-state {
+            padding: 3rem;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .empty-state-title {
+            font-family: var(--font-display);
+            font-size: 20px;
+            letter-spacing: 3px;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state-sub {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        /* ---- DELETE BTN ---- */
+        .del-btn {
+            background: none;
+            border: 1px solid rgba(255, 80, 103, 0.25);
+            color: rgba(255, 80, 103, 0.6);
+            border-radius: 5px;
+            width: 26px;
+            height: 26px;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .del-btn:hover {
+            border-color: var(--red);
+            color: var(--red);
+            background: rgba(255, 80, 103, 0.1);
+        }
+
+        /* ---- DIVIDER ---- */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 1.5rem 0;
+        }
+
+        /* ---- SCROLLBAR ---- */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--navy);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--muted2);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--aqua-dim);
+        }
+
+        /* ---- TOTAL-AMOUNT DISPLAY ---- */
+        .amount-display {
+            background: rgba(26, 127, 212, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-family: var(--font-mono);
+            font-size: 20px;
+            color: var(--aqua);
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .logout-btn {
+            font-family: var(--font-body);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            padding: 7px 16px;
+            border-radius: 7px;
+            border: 1px solid rgba(214, 48, 48, 0.25);
+            background: rgba(214, 48, 48, 0.07);
+            color: var(--red);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(214, 48, 48, 0.14);
+            border-color: var(--red);
+        }
+
+        .admin-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .tab-group {
+            display: flex;
+            gap: 4px;
+            background: #EAF1FA;
+            border-radius: 10px;
+            padding: 4px;
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+        }
+
+        .atab {
+            font-family: var(--font-body);
+            font-size: 12px;
+            letter-spacing: 0.3px;
+            text-transform: none;
+            padding: 7px 18px;
+            border-radius: 7px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            transition: all 0.22s;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        .atab.active {
+            background: var(--aqua);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(26, 127, 212, 0.25);
+        }
+
+        .atab:hover:not(.active) {
+            color: var(--aqua);
+        }
+
+        .asection {
+            display: none;
+        }
+
+        .asection.active {
+            display: block;
+            animation: fadeIn 0.25s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+
+        <!-- TOP BAR -->
+        <nav class="topbar">
+            <div class="logo">
+                <div class="logo-mark">PA</div>
+                <div class="logo-text">
+                    <span class="logo-title">PRATA AQUA</span>
+                    <span class="logo-sub">Live Stock Management</span>
+                </div>
+            </div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="switchPanel('dashboard')">Dashboard</button>
+                <button class="nav-tab" onclick="switchPanel('admin')">Admin</button>
+            </div>
+            <div class="live-badge">
+                <div class="live-dot"></div>
+                <span>LIVE</span>
+            </div>
+        </nav>
+
+        <!-- ======================== DASHBOARD PANEL ======================== -->
+        <div id="panel-dashboard" class="panel active">
+            <div class="dash-wrap">
+
+                <div style="margin-bottom:2rem;">
+                    <div class="section-title">STOCK OVERVIEW</div>
+                    <div class="section-sub">Real-time inventory status · PRATA AQUA</div>
+                </div>
+
+                <!-- Top Stats -->
+                <div class="stats-grid" id="dash-top-stats">
+                    <!-- filled by JS -->
+                </div>
+
+                <!-- Tempo Status -->
+                <div class="card" style="margin-bottom:2rem;">
+                    <div class="card-header">
+                        <span class="card-title">TEMPO LOAD STATUS</span>
+                        <span class="card-badge badge-amber">DISPATCH</span>
+                    </div>
+                    <div class="tempo-stat" id="dash-tempo-stat">
+                        <div class="tempo-item">
+                            <div class="val" style="color:var(--amber)" id="t-loaded">0</div>
+                            <div class="lbl">Total Loaded</div>
+                        </div>
+                        <div class="tempo-item">
+                            <div class="val" style="color:var(--red)" id="t-sold">0</div>
+                            <div class="lbl">Total Sold</div>
+                        </div>
+                        <div class="tempo-item">
+                            <div class="val" style="color:var(--aqua)" id="t-intransit">0</div>
+                            <div class="lbl">In Transit</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stock Balance Table -->
+                <div class="card" style="margin-bottom:2rem;">
+                    <div class="card-header">
+                        <span class="card-title">STOCK BALANCE</span>
+                        <span class="card-badge badge-green">LIVE</span>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th style="text-align:right">Total Added</th>
+                                    <th style="text-align:right">Total Sold</th>
+                                    <th style="text-align:right">Tempo Loaded</th>
+                                    <th style="text-align:right">Balance Stock</th>
+                                    <th style="text-align:center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-balance-tbody">
+                                <!-- filled by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sales Summary -->
+                <div class="summary-row">
+                    <div class="summary-card summary-cash">
+                        <div>
+                            <div class="sum-label green">Total Cash Collection</div>
+                            <div class="sum-value green" id="dash-total-cash">Rs. 0</div>
+                        </div>
+                        <div class="sum-icon green">CASH</div>
+                    </div>
+                    <div class="summary-card summary-online">
+                        <div>
+                            <div class="sum-label aqua">Total Online Collection</div>
+                            <div class="sum-value aqua" id="dash-total-online">Rs. 0</div>
+                        </div>
+                        <div class="sum-icon aqua">NET</div>
+                    </div>
+                </div>
+
+                <!-- Sales Table -->
+                <div class="card">
+                    <div class="card-header" style="flex-wrap:wrap;gap:1rem;">
+                        <span class="card-title">SALES REPORT</span>
+                        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+                            <div style="display:flex;align-items:center;gap:0.4rem;">
+                                <label
+                                    style="font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:1px;">DATE</label>
+                                <input type="date" id="dash-filter-date" class="form-control"
+                                    style="width:150px;padding:6px 10px;font-size:12px;" onchange="renderDashboard()">
+                            </div>
+                            <div style="display:flex;align-items:center;gap:0.4rem;">
+                                <label
+                                    style="font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:1px;">PRODUCT</label>
+                                <select id="dash-filter-product" class="form-control"
+                                    style="width:180px;padding:6px 10px;font-size:12px;" onchange="renderDashboard()">
+                                    <option value="">All Products</option>
+                                    <option>John Martin 200ml</option>
+                                    <option>John Martin 500ml</option>
+                                    <option>John Martin 1L</option>
+                                    <option>Prata Aqua 750ml</option>
+                                    <option>Prata Aqua 400ml</option>
+                                    <option>Prata Aqua 200ml</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="clearSalesFilters()"
+                                style="padding:6px 12px;font-size:12px;">Clear</button>
+                        </div>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Sr.</th>
+                                    <th>Date</th>
+                                    <th>Particular</th>
+                                    <th>Product</th>
+                                    <th style="text-align:right">Cases</th>
+                                    <th style="text-align:right">Rate</th>
+                                    <th style="text-align:right">Total</th>
+                                    <th style="text-align:center">Payment</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dash-sales-tbody">
+                                <!-- filled by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ======================== ADMIN PANEL ======================== -->
+        <div id="panel-admin" class="panel">
+
+            <!-- Login Screen -->
+            <div class="login-wrap" id="admin-login-screen">
+                <div class="login-box">
+                    <div class="login-icon">ADM</div>
+                    <div class="login-title">ADMIN ACCESS</div>
+                    <div class="login-sub">Enter credentials to proceed</div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" id="admin-pass-input"
+                            placeholder="Enter admin password" onkeydown="if(event.key==='Enter') adminLogin()">
+                    </div>
+                    <div id="login-error" class="error-msg"></div>
+                    <button class="btn btn-primary btn-full" style="margin-top:1rem;" onclick="adminLogin()">Unlock
+                        Admin Panel</button>
+                </div>
+            </div>
+
+            <!-- Admin Dashboard -->
+            <div id="admin-dashboard" style="display:none;">
+                <div class="admin-wrap">
+
+                    <div class="admin-topbar">
+                        <div>
+                            <div class="section-title">ADMIN PANEL</div>
+                            <div class="section-sub">Manage stock, sales and dispatch</div>
+                        </div>
+                        <button class="logout-btn" onclick="adminLogout()">Logout</button>
+                    </div>
+
+                    <!-- Admin Section Tabs -->
+                    <div class="tab-group">
+                        <button class="atab active" onclick="switchAdminTab('stock')">Stock Entry</button>
+                        <button class="atab" onclick="switchAdminTab('sales')">Sales Entry</button>
+                        <button class="atab" onclick="switchAdminTab('tempo')">Tempo Load</button>
+                        <button class="atab" onclick="switchAdminTab('records')">Records</button>
+                    </div>
+
+                    <!-- STOCK ENTRY -->
+                    <div class="asection active" id="atab-stock">
+                        <div class="admin-grid">
+                            <div class="card">
+                                <div class="card-header">
+                                    <span class="card-title">ADD STOCK</span>
+                                    <span class="card-badge badge-green">ENTRY</span>
+                                </div>
+                                <div style="padding:1.5rem;">
+                                    <div id="stock-alert" class="alert"></div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label">Date</label>
+                                            <input type="date" class="form-control" id="stock-date">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Product Name</label>
+                                            <select class="form-control" id="stock-product">
+                                                <option value="">Select Product</option>
+                                                <option>John Martin 200ml</option>
+                                                <option>John Martin 500ml</option>
+                                                <option>John Martin 1L</option>
+                                                <option>Prata Aqua 750ml</option>
+                                                <option>Prata Aqua 400ml</option>
+                                                <option>Prata Aqua 200ml</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Number of Cases</label>
+                                        <input type="number" class="form-control" id="stock-cases" min="1"
+                                            placeholder="Enter cases">
+                                    </div>
+                                    <button class="btn btn-primary" onclick="addStock()">Add Stock to Inventory</button>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <span class="card-title">CURRENT INVENTORY</span>
+                                    <span class="card-badge badge-aqua">SNAPSHOT</span>
+                                </div>
+                                <div class="tbl-wrap">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th style="text-align:right">Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="admin-inv-tbody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stock History -->
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">STOCK HISTORY</span>
+                                <span class="card-badge badge-green">LOG</span>
+                            </div>
+                            <div class="tbl-wrap">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Product</th>
+                                            <th style="text-align:right">Cases Added</th>
+                                            <th style="text-align:center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="stock-history-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SALES ENTRY -->
+                    <div class="asection" id="atab-sales">
+                        <div class="card" style="margin-bottom:1.5rem;">
+                            <div class="card-header">
+                                <span class="card-title">NEW SALE ENTRY</span>
+                                <span class="card-badge badge-aqua">ENTRY</span>
+                            </div>
+                            <div style="padding:1.5rem;">
+                                <div id="sales-alert" class="alert"></div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Date</label>
+                                        <input type="date" class="form-control" id="sale-date">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Particular (Customer / Party)</label>
+                                        <input type="text" class="form-control" id="sale-particular"
+                                            placeholder="Customer or party name">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Product Name</label>
+                                        <select class="form-control" id="sale-product" onchange="calcTotal()">
+                                            <option value="">Select Product</option>
+                                            <option>John Martin 200ml</option>
+                                            <option>John Martin 500ml</option>
+                                            <option>John Martin 1L</option>
+                                            <option>Prata Aqua 750ml</option>
+                                            <option>Prata Aqua 400ml</option>
+                                            <option>Prata Aqua 200ml</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Payment Mode</label>
+                                        <select class="form-control" id="sale-payment">
+                                            <option value="">Select Mode</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Online">Online</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Number of Cases</label>
+                                        <input type="number" class="form-control" id="sale-cases" min="1"
+                                            placeholder="Cases" oninput="calcTotal()">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Rate per Case (Rs.)</label>
+                                        <input type="number" class="form-control" id="sale-rate" min="0"
+                                            placeholder="Rate" oninput="calcTotal()">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Total Amount</label>
+                                    <div class="amount-display" id="sale-total-display">Rs. 0.00</div>
+                                </div>
+                                <button class="btn btn-primary" onclick="addSale()">Record Sale</button>
+                            </div>
+                        </div>
+
+                        <!-- Sales History -->
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">SALES HISTORY</span>
+                                <span class="card-badge badge-aqua">LOG</span>
+                            </div>
+                            <div class="tbl-wrap">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Sr.</th>
+                                            <th>Date</th>
+                                            <th>Particular</th>
+                                            <th>Product</th>
+                                            <th style="text-align:right">Cases</th>
+                                            <th style="text-align:right">Rate</th>
+                                            <th style="text-align:right">Total</th>
+                                            <th style="text-align:center">Payment</th>
+                                            <th style="text-align:center">Del</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-sales-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TEMPO LOAD -->
+                    <div class="asection" id="atab-tempo">
+                        <div class="admin-grid">
+                            <div class="card">
+                                <div class="card-header">
+                                    <span class="card-title">TEMPO DISPATCH</span>
+                                    <span class="card-badge badge-amber">ENTRY</span>
+                                </div>
+                                <div style="padding:1.5rem;">
+                                    <div id="tempo-alert" class="alert"></div>
+                                    <div class="form-group">
+                                        <label class="form-label">Date</label>
+                                        <input type="date" class="form-control" id="tempo-date">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Number of Cases Loaded</label>
+                                        <input type="number" class="form-control" id="tempo-loaded" min="0"
+                                            placeholder="Cases loaded on tempo">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Number of Cases Sold</label>
+                                        <input type="number" class="form-control" id="tempo-sold" min="0"
+                                            placeholder="Cases sold from tempo" value="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Return to Shop (Unsold)</label>
+                                        <input type="number" class="form-control" id="tempo-returned" min="0"
+                                            placeholder="Cases returned to shop" value="0">
+                                    </div>
+                                    <button class="btn btn-primary" onclick="addTempoLoad()">Submit Tempo Entry</button>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <span class="card-title">TEMPO SUMMARY</span>
+                                    <span class="card-badge badge-amber">LIVE</span>
+                                </div>
+                                <div class="tempo-stat">
+                                    <div class="tempo-item">
+                                        <div class="val" style="color:var(--amber)" id="adm-t-loaded">0</div>
+                                        <div class="lbl">Total Loaded</div>
+                                    </div>
+                                    <div class="tempo-item">
+                                        <div class="val" style="color:var(--red)" id="adm-t-sold">0</div>
+                                        <div class="lbl">Total Sold</div>
+                                    </div>
+                                    <div class="tempo-item">
+                                        <div class="val" style="color:var(--aqua)" id="adm-t-transit">0</div>
+                                        <div class="lbl">In Transit</div>
+                                    </div>
+                                </div>
+                                <div style="padding:0 1.5rem 1.5rem;">
+                                    <div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:1rem;">
+                                        <div
+                                            style="font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:0.5rem;">
+                                            Formula</div>
+                                        <div
+                                            style="font-family:var(--font-mono);font-size:11px;color:var(--aqua-dim);line-height:1.8;">
+                                            Loaded - Sold - Returned = In Transit<br>
+                                            Loaded reduces main inventory<br>
+                                            Returned adds back to inventory
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tempo History -->
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">TEMPO LOG</span>
+                                <span class="card-badge badge-amber">HISTORY</span>
+                            </div>
+                            <div class="tbl-wrap">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th style="text-align:right">Loaded</th>
+                                            <th style="text-align:right">Sold</th>
+                                            <th style="text-align:right">Returned</th>
+                                            <th style="text-align:right">Net Deducted</th>
+                                            <th style="text-align:center">Del</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-tempo-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RECORDS -->
+                    <div class="asection" id="atab-records">
+                        <div class="admin-grid">
+                            <div class="card">
+                                <div class="card-header">
+                                    <span class="card-title">FULL STOCK BALANCE</span>
+                                    <span class="card-badge badge-green">SNAPSHOT</span>
+                                </div>
+                                <div class="tbl-wrap">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th style="text-align:right">Added</th>
+                                                <th style="text-align:right">Sold</th>
+                                                <th style="text-align:right">Loaded</th>
+                                                <th style="text-align:right">Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="records-stock-tbody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <span class="card-title">COLLECTION SUMMARY</span>
+                                    <span class="card-badge badge-aqua">TOTALS</span>
+                                </div>
+                                <div style="padding:1.5rem;">
+                                    <div style="display:flex;flex-direction:column;gap:1rem;" id="records-collection">
+                                    </div>
+                                    <div class="divider"></div>
+                                    <button class="btn btn-danger btn-sm" onclick="clearAllData()"
+                                        style="margin-top:0.5rem;">Clear All Data (Reset)</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ===== FIREBASE DATA LAYER =====
+        const PRODUCTS = [
+            'John Martin 200ml', 'John Martin 500ml', 'John Martin 1L',
+            'Prata Aqua 750ml', 'Prata Aqua 400ml', 'Prata Aqua 200ml'
+        ];
+
+        // Local cache loaded from Firestore
+        let _cache = { stockHistory: [], sales: [], tempoLogs: [] };
+        let _fbReady = false;
+
+        async function ensureDb() {
+            if (window._db) return window._db;
+            return new Promise(res => window.addEventListener('firebase-ready', () => res(window._db), { once: true }));
+        }
+
+        async function loadData() {
+            const db = await ensureDb();
+            const { collection, getDocs } = window._fs;
+            const [sh, sa, tl] = await Promise.all([
+                getDocs(collection(db, 'stockHistory')),
+                getDocs(collection(db, 'sales')),
+                getDocs(collection(db, 'tempoLogs'))
+            ]);
+            _cache.stockHistory = sh.docs.map(d => ({ _id: d.id, ...d.data() }));
+            _cache.sales = sa.docs.map(d => ({ _id: d.id, ...d.data() }));
+            _cache.tempoLogs = tl.docs.map(d => ({ _id: d.id, ...d.data() }));
+            return _cache;
+        }
+
+        async function addDocFb(col, obj) {
+            const db = await ensureDb();
+            const { collection, addDoc } = window._fs;
+            const ref = await addDoc(collection(db, col), obj);
+            return ref.id;
+        }
+
+        async function deleteDocFb(col, id) {
+            const db = await ensureDb();
+            const { doc, deleteDoc } = window._fs;
+            await deleteDoc(doc(db, col, id));
+        }
+
+        async function clearCollection(col) {
+            const db = await ensureDb();
+            const { collection, getDocs, doc, deleteDoc } = window._fs;
+            const snap = await getDocs(collection(db, col));
+            await Promise.all(snap.docs.map(d => deleteDoc(doc(db, col, d.id))));
+        }
+
+        function getInventory(data) {
+            const inv = {};
+            PRODUCTS.forEach(p => inv[p] = { added: 0, sold: 0, tempoLoaded: 0, tempoReturned: 0 });
+            data.stockHistory.forEach(e => { if (inv[e.product]) inv[e.product].added += e.cases; });
+            data.sales.forEach(e => { if (inv[e.product]) inv[e.product].sold += e.cases; });
+            let totalTempoLoaded = 0, totalTempoReturned = 0;
+            data.tempoLogs.forEach(e => { totalTempoLoaded += e.loaded; totalTempoReturned += e.returned; });
+            return { inv, totalTempoLoaded, totalTempoReturned };
+        }
+
+        function getTotalsPerProduct(data) {
+            const inv = {};
+            PRODUCTS.forEach(p => inv[p] = { added: 0, sold: 0 });
+            data.stockHistory.forEach(e => { if (inv[e.product]) inv[e.product].added += e.cases; });
+            data.sales.forEach(e => { if (inv[e.product]) inv[e.product].sold += e.cases; });
+            return inv;
+        }
+
+        function getTotalStock(data) { return data.stockHistory.reduce((s, e) => s + e.cases, 0); }
+        function getTotalSold(data) { return data.sales.reduce((s, e) => s + e.cases, 0); }
+
+        function getTempoNetDeducted(data) {
+            let loaded = 0, sold = 0, returned = 0;
+            data.tempoLogs.forEach(e => { loaded += e.loaded; sold += e.sold; returned += e.returned; });
+            // In Transit = cases still on tempo (loaded - sold - returned)
+            return { loaded, sold, returned, inTransit: loaded - sold - returned };
+        }
+
+        function getBalance(data) {
+            const totalAdded = getTotalStock(data);
+            const totalSoldDirect = getTotalSold(data);
+            const tempo = getTempoNetDeducted(data);
+            // Balance = Added - DirectSold - TempoLoaded + TempoReturned
+            // (Returned cases come back to warehouse stock)
+            return totalAdded - totalSoldDirect - tempo.loaded + tempo.returned;
+        }
+
+        function fmtDate(d) {
+            if (!d) return '—';
+            const parts = d.split('-');
+            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            return d;
+        }
+
+        function fmtMoney(n) {
+            return 'Rs. ' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // ===== PANEL SWITCH =====
+        function switchPanel(p) {
+            document.querySelectorAll('.panel').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('panel-' + p).classList.add('active');
+            document.querySelectorAll('.nav-tab')[p === 'dashboard' ? 0 : 1].classList.add('active');
+            if (p === 'dashboard') renderDashboard();
+            if (p === 'admin') { checkAdminState(); }
+        }
+
+        // ===== ADMIN AUTH =====
+        let adminUnlocked = false;
+        const ADMIN_PASS = 'john1063';
+
+        function checkAdminState() {
+            if (adminUnlocked) {
+                document.getElementById('admin-login-screen').style.display = 'none';
+                document.getElementById('admin-dashboard').style.display = 'block';
+                renderAdmin();
+            } else {
+                document.getElementById('admin-login-screen').style.display = 'flex';
+                document.getElementById('admin-dashboard').style.display = 'none';
+            }
+        }
+
+        function adminLogin() {
+            const val = document.getElementById('admin-pass-input').value;
+            if (val === ADMIN_PASS) {
+                adminUnlocked = true;
+                document.getElementById('login-error').textContent = '';
+                document.getElementById('admin-pass-input').value = '';
+                checkAdminState();
+            } else {
+                document.getElementById('login-error').textContent = 'Incorrect password. Please try again.';
+            }
+        }
+
+        function adminLogout() {
+            adminUnlocked = false;
+            checkAdminState();
+        }
+
+        // ===== ADMIN TABS =====
+        function switchAdminTab(tab) {
+            document.querySelectorAll('.asection').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.atab').forEach(el => el.classList.remove('active'));
+            document.getElementById('atab-' + tab).classList.add('active');
+            const idx = ['stock', 'sales', 'tempo', 'records'].indexOf(tab);
+            document.querySelectorAll('.atab')[idx].classList.add('active');
+            renderAdmin();
+        }
+
+        // ===== RENDER DASHBOARD =====
+        function renderDashboard() {
+            const data = loadData();
+            const tempo = getTempoNetDeducted(data);
+            const perProduct = getTotalsPerProduct(data);
+            const totalAdded = getTotalStock(data);
+            const totalSold = getTotalSold(data);
+            const balance = getBalance(data);
+
+            // Top Stats
+            const statsEl = document.getElementById('dash-top-stats');
+            statsEl.innerHTML = `
+      <div class="stat-card aqua">
+        <div class="stat-label">Total Stock Added</div>
+        <div class="stat-value">${totalAdded}</div>
+        <div class="stat-unit">CASES</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Total Sold</div>
+        <div class="stat-value">${totalSold}</div>
+        <div class="stat-unit">CASES</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-label">In Transit (Tempo)</div>
+        <div class="stat-value">${Math.max(0, tempo.inTransit)}</div>
+        <div class="stat-unit">CASES</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Balance Stock</div>
+        <div class="stat-value">${Math.max(0, balance)}</div>
+        <div class="stat-unit">CASES</div>
+      </div>
+    `;
+
+            // Tempo
+            document.getElementById('t-loaded').textContent = tempo.loaded;
+            document.getElementById('t-sold').textContent = tempo.sold;
+            document.getElementById('t-intransit').textContent = Math.max(0, tempo.inTransit);
+
+            // Stock Balance Table
+            const tbody = document.getElementById('stock-balance-tbody');
+            if (PRODUCTS.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-state-title">NO DATA</div></div></td></tr>';
+            } else {
+                let rows = '';
+                PRODUCTS.forEach(p => {
+                    const d = perProduct[p];
+                    const bal = d.added - d.sold;
+                    let tag = bal > 10 ? '<span class="balance-tag tag-ok">OK</span>' : bal > 0 ? '<span class="balance-tag tag-low">LOW</span>' : '<span class="balance-tag tag-out">OUT</span>';
+                    rows += `<tr>
+          <td class="td-product">${p}</td>
+          <td class="td-num td-aqua">${d.added}</td>
+          <td class="td-num td-red">${d.sold}</td>
+          <td class="td-num td-amber">—</td>
+          <td class="td-num td-green">${Math.max(0, bal)}</td>
+          <td style="text-align:center">${tag}</td>
+        </tr>`;
+                });
+                tbody.innerHTML = rows || '<tr><td colspan="6" class="empty-state"><div class="empty-state-title">NO STOCK</div></td></tr>';
+            }
+
+            // Sales Summary
+            let cashTotal = 0, onlineTotal = 0;
+            data.sales.forEach(s => {
+                if (s.payment === 'Cash') cashTotal += s.total;
+                else onlineTotal += s.total;
+            });
+            document.getElementById('dash-total-cash').textContent = fmtMoney(cashTotal);
+            document.getElementById('dash-total-online').textContent = fmtMoney(onlineTotal);
+
+            // Sales Table
+            const salesTbody = document.getElementById('dash-sales-tbody');
+            if (data.sales.length === 0) {
+                salesTbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-state-title">NO SALES YET</div><div class="empty-state-sub">Sales entered from admin will appear here</div></div></td></tr>`;
+            } else {
+                let rows = '';
+                data.sales.forEach((s, i) => {
+                    const payBadge = s.payment === 'Cash' ? '<span class="pay-cash">Cash</span>' : '<span class="pay-online">Online</span>';
+                    rows += `<tr>
+          <td style="color:var(--muted);font-family:var(--font-mono);font-size:11px;">${i + 1}</td>
+          <td style="font-family:var(--font-mono);font-size:11px;">${fmtDate(s.date)}</td>
+          <td style="color:var(--white);">${s.particular}</td>
+          <td style="color:var(--muted);font-size:11px;">${s.product}</td>
+          <td class="td-num">${s.cases}</td>
+          <td class="td-num" style="color:var(--muted);">${fmtMoney(s.rate)}</td>
+          <td class="td-num td-green">${fmtMoney(s.total)}</td>
+          <td style="text-align:center;">${payBadge}</td>
+        </tr>`;
+                });
+                salesTbody.innerHTML = rows;
+            }
+        }
+
+        // ===== RENDER ADMIN =====
+        function renderAdmin() {
+            const data = loadData();
+
+            // --- Inventory snapshot ---
+            const invTbody = document.getElementById('admin-inv-tbody');
+            if (invTbody) {
+                let rows = '';
+                PRODUCTS.forEach(p => {
+                    const d = loadData();
+                    let added = 0, sold = 0;
+                    d.stockHistory.forEach(e => { if (e.product === p) added += e.cases; });
+                    d.sales.forEach(e => { if (e.product === p) sold += e.cases; });
+                    const tempo = getTempoNetDeducted(d);
+                    const balPerProduct = added - sold;
+                    const cls = balPerProduct > 10 ? 'td-green' : balPerProduct > 0 ? 'td-amber' : 'td-red';
+                    rows += `<tr>
+          <td class="td-product">${p}</td>
+          <td class="td-num ${cls}">${Math.max(0, balPerProduct)}</td>
+        </tr>`;
+                });
+                invTbody.innerHTML = rows;
+            }
+
+            // --- Stock History ---
+            const shTbody = document.getElementById('stock-history-tbody');
+            if (shTbody) {
+                if (data.stockHistory.length === 0) {
+                    shTbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-state-title">NO ENTRIES</div></div></td></tr>`;
+                } else {
+                    let rows = '';
+                    [...data.stockHistory].reverse().forEach((e, i) => {
+                        const realIdx = data.stockHistory.length - 1 - i;
+                        rows += `<tr>
+            <td style="font-family:var(--font-mono);font-size:11px;">${fmtDate(e.date)}</td>
+            <td class="td-product">${e.product}</td>
+            <td class="td-num td-aqua">${e.cases}</td>
+            <td style="text-align:center;"><button class="del-btn" onclick="deleteStock(${realIdx})">x</button></td>
+          </tr>`;
+                    });
+                    shTbody.innerHTML = rows;
+                }
+            }
+
+            // --- Sales History ---
+            const asSales = document.getElementById('admin-sales-tbody');
+            if (asSales) {
+                if (data.sales.length === 0) {
+                    asSales.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-state-title">NO SALES</div></div></td></tr>`;
+                } else {
+                    let rows = '';
+                    [...data.sales].reverse().forEach((s, i) => {
+                        const realIdx = data.sales.length - 1 - i;
+                        const payBadge = s.payment === 'Cash' ? '<span class="pay-cash">Cash</span>' : '<span class="pay-online">Online</span>';
+                        rows += `<tr>
+            <td style="color:var(--muted);font-family:var(--font-mono);font-size:10px;">${realIdx + 1}</td>
+            <td style="font-family:var(--font-mono);font-size:11px;">${fmtDate(s.date)}</td>
+            <td>${s.particular}</td>
+            <td style="font-size:11px;color:var(--muted);">${s.product}</td>
+            <td class="td-num">${s.cases}</td>
+            <td class="td-num" style="color:var(--muted);">${fmtMoney(s.rate)}</td>
+            <td class="td-num td-green">${fmtMoney(s.total)}</td>
+            <td style="text-align:center;">${payBadge}</td>
+            <td style="text-align:center;"><button class="del-btn" onclick="deleteSale(${realIdx})">x</button></td>
+          </tr>`;
+                    });
+                    asSales.innerHTML = rows;
+                }
+            }
+
+            // --- Tempo ---
+            const tempo = getTempoNetDeducted(data);
+            const tempoEls = [
+                ['adm-t-loaded', tempo.loaded],
+                ['adm-t-sold', tempo.sold],
+                ['adm-t-transit', Math.max(0, tempo.inTransit)]
+            ];
+            tempoEls.forEach(([id, val]) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = val;
+            });
+
+            const atTbody = document.getElementById('admin-tempo-tbody');
+            if (atTbody) {
+                if (data.tempoLogs.length === 0) {
+                    atTbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-state-title">NO TEMPO LOGS</div></div></td></tr>`;
+                } else {
+                    let rows = '';
+                    [...data.tempoLogs].reverse().forEach((e, i) => {
+                        const realIdx = data.tempoLogs.length - 1 - i;
+                        const net = e.loaded - e.returned;
+                        rows += `<tr>
+            <td style="font-family:var(--font-mono);font-size:11px;">${fmtDate(e.date)}</td>
+            <td class="td-num td-amber">${e.loaded}</td>
+            <td class="td-num td-red">${e.sold}</td>
+            <td class="td-num td-green">${e.returned}</td>
+            <td class="td-num" style="color:var(--muted);">${net}</td>
+            <td style="text-align:center;"><button class="del-btn" onclick="deleteTempo(${realIdx})">x</button></td>
+          </tr>`;
+                    });
+                    atTbody.innerHTML = rows;
+                }
+            }
+
+            // --- Records ---
+            const recStock = document.getElementById('records-stock-tbody');
+            if (recStock) {
+                let rows = '';
+                PRODUCTS.forEach(p => {
+                    let added = 0, sold = 0;
+                    data.stockHistory.forEach(e => { if (e.product === p) added += e.cases; });
+                    data.sales.forEach(e => { if (e.product === p) sold += e.cases; });
+                    const bal = added - sold;
+                    rows += `<tr>
+          <td class="td-product">${p}</td>
+          <td class="td-num td-aqua">${added}</td>
+          <td class="td-num td-red">${sold}</td>
+          <td class="td-num td-amber">—</td>
+          <td class="td-num td-green">${Math.max(0, bal)}</td>
+        </tr>`;
+                });
+                recStock.innerHTML = rows;
+            }
+
+            const recColl = document.getElementById('records-collection');
+            if (recColl) {
+                let cashT = 0, onlineT = 0;
+                data.sales.forEach(s => {
+                    if (s.payment === 'Cash') cashT += s.total;
+                    else onlineT += s.total;
+                });
+                recColl.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem;background:rgba(0,229,160,0.08);border-radius:10px;border:1px solid rgba(0,229,160,0.2);">
+          <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--green);">Cash Collection</span>
+          <span style="font-family:var(--font-display);font-size:24px;color:var(--green);">${fmtMoney(cashT)}</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem;background:rgba(10,138,92,0.07);border-radius:10px;border:1px solid rgba(10,138,92,0.2);">
+          <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);">Cash</span>
+          <span style="font-weight:700;font-size:20px;color:var(--green);">${fmtMoney(cashT)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem;background:rgba(26,127,212,0.07);border-radius:10px;border:1px solid rgba(26,127,212,0.2);">
+          <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--aqua);">Online</span>
+          <span style="font-weight:700;font-size:20px;color:var(--aqua);">${fmtMoney(onlineT)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem;background:#F0F6FF;border-radius:10px;border:1px solid var(--border);">
+          <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);">Total</span>
+          <span style="font-weight:700;font-size:20px;color:var(--white);">${fmtMoney(cashT + onlineT)}</span>
+        </div>
+      `;
+            }
+        }
+
+        // ===== ADD STOCK =====
+        async function addStock() {
+            const date = document.getElementById('stock-date').value;
+            const product = document.getElementById('stock-product').value;
+            const cases = parseInt(document.getElementById('stock-cases').value);
+            const alertEl = document.getElementById('stock-alert');
+            if (!date || !product || !cases || cases < 1) { showAlert(alertEl, 'error', 'Please fill all fields.'); return; }
+            await addDocFb('stockHistory', { date, product, cases });
+            showAlert(alertEl, 'success', `Added ${cases} cases of ${product}.`);
+            document.getElementById('stock-product').value = '';
+            document.getElementById('stock-cases').value = '';
+            renderAdmin();
+        }
+
+        // ===== ADD SALE =====
+        function calcTotal() {
+            const cases = parseFloat(document.getElementById('sale-cases').value) || 0;
+            const rate = parseFloat(document.getElementById('sale-rate').value) || 0;
+            document.getElementById('sale-total-display').textContent = fmtMoney(cases * rate);
+        }
+
+        async function addSale() {
+            const date = document.getElementById('sale-date').value;
+            const particular = document.getElementById('sale-particular').value.trim();
+            const product = document.getElementById('sale-product').value;
+            const cases = parseInt(document.getElementById('sale-cases').value);
+            const rate = parseFloat(document.getElementById('sale-rate').value);
+            const payment = document.getElementById('sale-payment').value;
+            const alertEl = document.getElementById('sales-alert');
+            if (!date || !particular || !product || !cases || !rate || !payment) { showAlert(alertEl, 'error', 'Please fill all required fields.'); return; }
+            const data = await loadData();
+            let added = 0, sold = 0;
+            data.stockHistory.forEach(e => { if (e.product === product) added += e.cases; });
+            data.sales.forEach(e => { if (e.product === product) sold += e.cases; });
+            const available = added - sold;
+            if (cases > available) { showAlert(alertEl, 'error', `Insufficient stock. Available: ${available} cases of ${product}`); return; }
+            const total = cases * rate;
+            await addDocFb('sales', { date, particular, product, cases, rate, total, payment });
+            showAlert(alertEl, 'success', `Sale recorded: ${cases} cases of ${product} for ${fmtMoney(total)}`);
+            ['sale-date', 'sale-particular', 'sale-product', 'sale-cases', 'sale-rate', 'sale-payment'].forEach(id => { document.getElementById(id).value = ''; });
+            document.getElementById('sale-total-display').textContent = 'Rs. 0.00';
+            renderAdmin();
+        }
+
+        // ===== ADD TEMPO =====
+        async function addTempoLoad() {
+            const date = document.getElementById('tempo-date').value;
+            const loaded = parseInt(document.getElementById('tempo-loaded').value) || 0;
+            const sold = parseInt(document.getElementById('tempo-sold').value) || 0;
+            const returned = parseInt(document.getElementById('tempo-returned').value) || 0;
+            const alertEl = document.getElementById('tempo-alert');
+            if (!date || loaded < 1) { showAlert(alertEl, 'error', 'Please fill date and loaded cases.'); return; }
+            if (sold + returned > loaded) { showAlert(alertEl, 'error', 'Sold + Returned cannot exceed Loaded cases.'); return; }
+            const data = await loadData();
+            const currentBalance = getBalance(data);
+            if (loaded > currentBalance) { showAlert(alertEl, 'error', `Insufficient stock. Balance: ${Math.max(0, currentBalance)} cases.`); return; }
+            // Returned cases are automatically added back to warehouse balance via getBalance formula
+            await addDocFb('tempoLogs', { date, loaded, sold, returned });
+            showAlert(alertEl, 'success', `Tempo: ${loaded} loaded, ${sold} sold, ${returned} returned to stock.`);
+            document.getElementById('tempo-loaded').value = '';
+            document.getElementById('tempo-sold').value = '0';
+            document.getElementById('tempo-returned').value = '0';
+            renderAdmin();
+        }
+
+        // ===== DELETE =====
+        async function deleteStock(id) { if (!confirm('Delete this stock entry?')) return; await deleteDocFb('stockHistory', id); renderAdmin(); }
+        async function deleteSale(id) { if (!confirm('Delete this sale entry?')) return; await deleteDocFb('sales', id); renderAdmin(); }
+        async function deleteTempo(id) { if (!confirm('Delete this tempo entry?')) return; await deleteDocFb('tempoLogs', id); renderAdmin(); }
+
+        async function clearAllData() {
+            if (!confirm('WARNING: This will permanently delete ALL data. Continue?')) return;
+            await Promise.all([clearCollection('stockHistory'), clearCollection('sales'), clearCollection('tempoLogs')]);
+            renderAdmin();
+            alert('All data cleared successfully.');
+        }
+
+        // ===== ALERTS =====
+        function showAlert(el, type, msg) {
+            el.textContent = msg;
+            el.className = 'alert show alert-' + type;
+            setTimeout(() => { el.classList.remove('show'); }, 4000);
+        }
+
+        // ===== DEFAULT DATES =====
+        function setDefaultDates() {
+            const today = new Date().toISOString().split('T')[0];
+            ['stock-date', 'sale-date', 'tempo-date'].forEach(id => { const el = document.getElementById(id); if (el) el.value = today; });
+            const df = document.getElementById('dash-filter-date');
+            if (df) df.value = today;
+        }
+
+        // ===== INIT =====
+        window.addEventListener('DOMContentLoaded', async () => {
+            setDefaultDates();
+            await renderDashboard();
+        });
+    </script>
+</body>
+
+</html>
