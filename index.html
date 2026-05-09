@@ -502,6 +502,24 @@
             border: 1px solid rgba(214, 48, 48, 0.25);
         }
 
+        .btn-filter {
+            background: linear-gradient(135deg, var(--aqua), var(--aqua-dim));
+            color: #fff;
+            box-shadow: 0 2px 10px rgba(26,127,212,0.28);
+            letter-spacing: 0.5px;
+            font-weight: 700;
+        }
+
+        .btn-filter:hover {
+            background: var(--aqua-dim);
+            box-shadow: 0 4px 16px rgba(26,127,212,0.38);
+            transform: translateY(-1px);
+        }
+
+        .btn-filter:active {
+            transform: translateY(0);
+        }
+
         /* ---- PAYMENT BADGES ---- */
         .pay-cash {
             display: inline-block;
@@ -1482,16 +1500,16 @@
                         </div>
                         <div class="filter-bar">
                             <input type="month" id="dash-filter-month" class="form-control"
-                                style="padding:6px 10px;font-size:12px;" onchange="renderDashboard()" title="Filter by Month">
+                                style="padding:6px 10px;font-size:12px;" title="Filter by Month">
                             <button class="btn btn-outline btn-sm" onclick="setPreviousMonth(true)" title="Previous Month">◀ Prev</button>
                             <button class="btn btn-outline btn-sm" onclick="setNextMonth(true)" title="Next Month">Next ▶</button>
                             <input type="date" id="dash-filter-from" class="form-control"
-                                style="padding:6px 10px;font-size:12px;" onchange="renderDashboard()" title="From date">
+                                style="padding:6px 10px;font-size:12px;" title="From date">
                             <span class="date-range-sep">—</span>
                             <input type="date" id="dash-filter-to" class="form-control"
-                                style="padding:6px 10px;font-size:12px;" onchange="renderDashboard()" title="To date">
+                                style="padding:6px 10px;font-size:12px;" title="To date">
                             <select id="dash-filter-product" class="form-control"
-                                style="padding:6px 10px;font-size:12px;" onchange="renderDashboard()">
+                                style="padding:6px 10px;font-size:12px;">
                                 <option value="">All Products</option>
                                 <option>John Martin 200ml</option>
                                 <option>John Martin 500ml</option>
@@ -1500,6 +1518,7 @@
                                 <option>Prata Aqua 400ml</option>
                                 <option>Prata Aqua 200ml</option>
                             </select>
+                            <button class="btn btn-filter btn-sm" onclick="applyDashFilter()">🔍 Filter</button>
                             <button class="btn btn-outline btn-sm" onclick="clearSalesFilters()">Clear</button>
                         </div>
                     </div>
@@ -1695,17 +1714,18 @@
                             <div class="card-header" style="flex-wrap:wrap;gap:0.75rem;">
                                 <span class="card-title">SALES HISTORY</span>
                                 <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-                                    <input type="month" id="sh-filter-month" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;" title="Filter by Month" onchange="renderAdminSalesHistory()">
+                                    <input type="month" id="sh-filter-month" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;" title="Filter by Month">
                                     <button class="btn btn-outline btn-sm" onclick="setPreviousMonth(false)" title="Previous Month">◀ Prev</button>
                                     <button class="btn btn-outline btn-sm" onclick="setNextMonth(false)" title="Next Month">Next ▶</button>
-                                    <input type="date" id="sh-filter-from" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;" title="From date" onchange="renderAdminSalesHistory()">
+                                    <input type="date" id="sh-filter-from" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;" title="From date">
                                     <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">—</span>
-                                    <input type="date" id="sh-filter-to" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;" title="To date" onchange="renderAdminSalesHistory()">
-                                    <select id="sh-filter-status" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;" onchange="renderAdminSalesHistory()">
+                                    <input type="date" id="sh-filter-to" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;" title="To date">
+                                    <select id="sh-filter-status" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;">
                                         <option value="">All Status</option>
                                         <option value="Paid">Paid</option>
                                         <option value="Pending">Pending</option>
                                     </select>
+                                    <button class="btn btn-filter btn-sm" onclick="applyAdminFilter()">🔍 Filter</button>
                                     <button class="btn btn-outline btn-sm" onclick="clearSalesHistoryFilters()">Clear</button>
                                     <button class="btn btn-sm" style="background:rgba(10,138,92,0.1);border:1px solid rgba(10,138,92,0.3);color:var(--green);" onclick="exportSalesHistoryToExcel()">⬇ Export Excel</button>
                                 </div>
@@ -2180,13 +2200,21 @@
                 }
             }
 
+            function applyDashFilter() {
+                renderDashboard(true);
+            }
+
+            function applyAdminFilter() {
+                renderAdminSalesHistory();
+            }
+
             function clearSalesFilters() {
                 const monthEl = document.getElementById('dash-filter-month');
                 if (monthEl) monthEl.value = '';
                 document.getElementById('dash-filter-from').value = '';
                 document.getElementById('dash-filter-to').value = '';
                 document.getElementById('dash-filter-product').value = '';
-                renderDashboard(false);
+                renderDashboard(true);
             }
 
             function getMonthOffset(monthInputId, offset) {
