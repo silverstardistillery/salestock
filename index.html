@@ -2205,20 +2205,12 @@
                 }
             }
 
-            async function applyDashFilter() {
-                const btn = event && event.target;
-                if (btn) { btn.textContent = '⏳ Loading...'; btn.disabled = true; }
-                await loadData();
-                await renderDashboard(false);
-                if (btn) { btn.textContent = '🔍 Filter'; btn.disabled = false; }
+            function applyDashFilter() {
+                renderDashboard(false);
             }
 
-            async function applyAdminFilter() {
-                const btn = event && event.target;
-                if (btn) { btn.textContent = '⏳ Loading...'; btn.disabled = true; }
-                await loadData();
+            function applyAdminFilter() {
                 renderAdminSalesHistory();
-                if (btn) { btn.textContent = '🔍 Filter'; btn.disabled = false; }
             }
 
             function clearSalesFilters() {
