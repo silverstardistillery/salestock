@@ -2691,6 +2691,7 @@
                     setupRealtimeSync();
                 } catch (e) {
                     console.error('Init error:', e);
+                    alert('Database Error: ' + e.message + '\n\nIf this says "Missing or insufficient permissions", your Firebase Test Mode rules have likely expired. You need to update your Firestore rules in the Firebase Console to allow reads/writes.');
                 } finally {
                     const overlay = document.getElementById('loading-overlay');
                     overlay.classList.add('hidden');
