@@ -2141,7 +2141,12 @@
 
                 let filteredSales = [...data.sales].reverse(); // latest first
                 if (filterMonth) {
-                    filteredSales = filteredSales.filter(s => s.date && s.date.startsWith(filterMonth));
+                    const [fy, fm] = filterMonth.split('-');
+                    filteredSales = filteredSales.filter(s => {
+                        if (!s.date) return false;
+                        const parts = s.date.split('-');
+                        return parts[0] === fy && parts[1] === fm;
+                    });
                 }
                 if (filterFrom) filteredSales = filteredSales.filter(s => s.date >= filterFrom);
                 if (filterTo) filteredSales = filteredSales.filter(s => s.date <= filterTo);
@@ -2200,12 +2205,20 @@
                 }
             }
 
-            function applyDashFilter() {
-                renderDashboard(true);
+            async function applyDashFilter() {
+                const btn = event && event.target;
+                if (btn) { btn.textContent = '⏳ Loading...'; btn.disabled = true; }
+                await loadData();
+                await renderDashboard(false);
+                if (btn) { btn.textContent = '🔍 Filter'; btn.disabled = false; }
             }
 
-            function applyAdminFilter() {
+            async function applyAdminFilter() {
+                const btn = event && event.target;
+                if (btn) { btn.textContent = '⏳ Loading...'; btn.disabled = true; }
+                await loadData();
                 renderAdminSalesHistory();
+                if (btn) { btn.textContent = '🔍 Filter'; btn.disabled = false; }
             }
 
             function clearSalesFilters() {
@@ -2460,8 +2473,15 @@
                 const toVal = document.getElementById('sh-filter-to')?.value || '';
                 const statusVal = document.getElementById('sh-filter-status')?.value || '';
 
-                let sales = [...data.sales].reverse();
-                if (monthVal) sales = sales.filter(s => s.date && s.date.startsWith(monthVal));
+                let sales = [...(data.sales || [])].reverse();
+                if (monthVal) {
+                    const [fy, fm] = monthVal.split('-');
+                    sales = sales.filter(s => {
+                        if (!s.date) return false;
+                        const parts = s.date.split('-');
+                        return parts[0] === fy && parts[1] === fm;
+                    });
+                }
                 if (fromVal) sales = sales.filter(s => s.date >= fromVal);
                 if (toVal) sales = sales.filter(s => s.date <= toVal);
                 if (statusVal) sales = sales.filter(s => (s.receivedStatus || 'Pending') === statusVal);
