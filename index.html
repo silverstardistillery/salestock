@@ -1481,6 +1481,8 @@
                             <span class="month-badge" id="dash-month-label">This Month</span>
                         </div>
                         <div class="filter-bar">
+                            <input type="month" id="dash-filter-month" class="form-control"
+                                style="padding:6px 10px;font-size:12px;" onchange="renderDashboard()" title="Filter by Month">
                             <input type="date" id="dash-filter-from" class="form-control"
                                 style="padding:6px 10px;font-size:12px;" onchange="renderDashboard()" title="From date">
                             <span class="date-range-sep">—</span>
@@ -1691,6 +1693,7 @@
                             <div class="card-header" style="flex-wrap:wrap;gap:0.75rem;">
                                 <span class="card-title">SALES HISTORY</span>
                                 <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                                    <input type="month" id="sh-filter-month" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;" title="Filter by Month" onchange="renderAdminSalesHistory()">
                                     <input type="date" id="sh-filter-from" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;" title="From date" onchange="renderAdminSalesHistory()">
                                     <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">—</span>
                                     <input type="date" id="sh-filter-to" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;" title="To date" onchange="renderAdminSalesHistory()">
@@ -2104,20 +2107,29 @@
                 tbody.innerHTML = rows || `<tr><td colspan="6"><div class="empty-state"><div class="empty-state-title">NO STOCK</div></div></td></tr>`;
 
                 // Filter sales: default = current month
+                const monthEl = document.getElementById('dash-filter-month');
                 const fromEl = document.getElementById('dash-filter-from');
                 const toEl = document.getElementById('dash-filter-to');
                 const productFilter = document.getElementById('dash-filter-product').value;
+                const filterMonth = monthEl ? monthEl.value : '';
                 const filterFrom = fromEl.value;
                 const filterTo = toEl.value;
 
                 let filteredSales = [...data.sales].reverse(); // latest first
+                if (filterMonth) {
+                    filteredSales = filteredSales.filter(s => s.date && s.date.startsWith(filterMonth));
+                }
                 if (filterFrom) filteredSales = filteredSales.filter(s => s.date >= filterFrom);
                 if (filterTo) filteredSales = filteredSales.filter(s => s.date <= filterTo);
                 if (productFilter) filteredSales = filteredSales.filter(s => s.product === productFilter);
 
                 // Update month label
                 const monthLabel = document.getElementById('dash-month-label');
-                if (filterFrom || filterTo) {
+                if (filterMonth) {
+                    const [y, m] = filterMonth.split('-');
+                    const dateObj = new Date(y, m - 1);
+                    monthLabel.textContent = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+                } else if (filterFrom || filterTo) {
                     monthLabel.textContent = filterFrom && filterTo ? `${fmtDate(filterFrom)} – ${fmtDate(filterTo)}` : (filterFrom ? `From ${fmtDate(filterFrom)}` : `To ${fmtDate(filterTo)}`);
                 } else {
                     const now = new Date();
@@ -2165,6 +2177,8 @@
             }
 
             function clearSalesFilters() {
+                const monthEl = document.getElementById('dash-filter-month');
+                if (monthEl) monthEl.value = '';
                 document.getElementById('dash-filter-from').value = '';
                 document.getElementById('dash-filter-to').value = '';
                 document.getElementById('dash-filter-product').value = '';
@@ -2361,11 +2375,13 @@
                 const asSales = document.getElementById('admin-sales-tbody');
                 if (!asSales) return;
                 const data = _cache;
+                const monthVal = document.getElementById('sh-filter-month')?.value || '';
                 const fromVal = document.getElementById('sh-filter-from')?.value || '';
                 const toVal = document.getElementById('sh-filter-to')?.value || '';
                 const statusVal = document.getElementById('sh-filter-status')?.value || '';
 
                 let sales = [...data.sales].reverse();
+                if (monthVal) sales = sales.filter(s => s.date && s.date.startsWith(monthVal));
                 if (fromVal) sales = sales.filter(s => s.date >= fromVal);
                 if (toVal) sales = sales.filter(s => s.date <= toVal);
                 if (statusVal) sales = sales.filter(s => (s.receivedStatus || 'Pending') === statusVal);
@@ -2398,7 +2414,7 @@
             }
 
             function clearSalesHistoryFilters() {
-                ['sh-filter-from', 'sh-filter-to'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+                ['sh-filter-month', 'sh-filter-from', 'sh-filter-to'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
                 const sf = document.getElementById('sh-filter-status'); if (sf) sf.value = '';
                 renderAdminSalesHistory();
             }
@@ -2412,11 +2428,13 @@
 
             function exportSalesHistoryToExcel() {
                 const data = _cache;
+                const monthVal = document.getElementById('sh-filter-month')?.value || '';
                 const fromVal = document.getElementById('sh-filter-from')?.value || '';
                 const toVal = document.getElementById('sh-filter-to')?.value || '';
                 const statusVal = document.getElementById('sh-filter-status')?.value || '';
 
                 let sales = [...data.sales].reverse();
+                if (monthVal) sales = sales.filter(s => s.date && s.date.startsWith(monthVal));
                 if (fromVal) sales = sales.filter(s => s.date >= fromVal);
                 if (toVal) sales = sales.filter(s => s.date <= toVal);
                 if (statusVal) sales = sales.filter(s => (s.receivedStatus || 'Pending') === statusVal);
