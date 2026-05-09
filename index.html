@@ -1483,7 +1483,8 @@
                         <div class="filter-bar">
                             <input type="month" id="dash-filter-month" class="form-control"
                                 style="padding:6px 10px;font-size:12px;" onchange="renderDashboard()" title="Filter by Month">
-                            <button class="btn btn-outline btn-sm" onclick="setPreviousMonth(true)">Prev Month</button>
+                            <button class="btn btn-outline btn-sm" onclick="setPreviousMonth(true)" title="Previous Month">◀ Prev</button>
+                            <button class="btn btn-outline btn-sm" onclick="setNextMonth(true)" title="Next Month">Next ▶</button>
                             <input type="date" id="dash-filter-from" class="form-control"
                                 style="padding:6px 10px;font-size:12px;" onchange="renderDashboard()" title="From date">
                             <span class="date-range-sep">—</span>
@@ -1695,7 +1696,8 @@
                                 <span class="card-title">SALES HISTORY</span>
                                 <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
                                     <input type="month" id="sh-filter-month" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;" title="Filter by Month" onchange="renderAdminSalesHistory()">
-                                    <button class="btn btn-outline btn-sm" onclick="setPreviousMonth(false)">Prev Month</button>
+                                    <button class="btn btn-outline btn-sm" onclick="setPreviousMonth(false)" title="Previous Month">◀ Prev</button>
+                                    <button class="btn btn-outline btn-sm" onclick="setNextMonth(false)" title="Next Month">Next ▶</button>
                                     <input type="date" id="sh-filter-from" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;" title="From date" onchange="renderAdminSalesHistory()">
                                     <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">—</span>
                                     <input type="date" id="sh-filter-to" class="form-control" style="padding:6px 10px;font-size:12px;width:auto;" title="To date" onchange="renderAdminSalesHistory()">
@@ -2187,21 +2189,48 @@
                 renderDashboard(false);
             }
 
+            function getMonthOffset(monthInputId, offset) {
+                const monthEl = document.getElementById(monthInputId);
+                let base;
+                if (monthEl && monthEl.value) {
+                    const [y, m] = monthEl.value.split('-').map(Number);
+                    base = new Date(y, m - 1, 1);
+                } else {
+                    base = new Date();
+                    base.setDate(1);
+                }
+                base.setMonth(base.getMonth() + offset);
+                const y = base.getFullYear();
+                const m = String(base.getMonth() + 1).padStart(2, '0');
+                return `${y}-${m}`;
+            }
+
             function setPreviousMonth(isDashboard) {
-                const now = new Date();
-                now.setMonth(now.getMonth() - 1);
-                const y = now.getFullYear();
-                const m = String(now.getMonth() + 1).padStart(2, '0');
-                const prevMonthVal = `${y}-${m}`;
                 if (isDashboard) {
-                    const monthEl = document.getElementById('dash-filter-month');
-                    if (monthEl) monthEl.value = prevMonthVal;
+                    const val = getMonthOffset('dash-filter-month', -1);
+                    document.getElementById('dash-filter-month').value = val;
                     document.getElementById('dash-filter-from').value = '';
                     document.getElementById('dash-filter-to').value = '';
-                    renderDashboard(false);
+                    renderDashboard(true);
                 } else {
-                    const monthEl = document.getElementById('sh-filter-month');
-                    if (monthEl) monthEl.value = prevMonthVal;
+                    const val = getMonthOffset('sh-filter-month', -1);
+                    document.getElementById('sh-filter-month').value = val;
+                    document.getElementById('sh-filter-from').value = '';
+                    document.getElementById('sh-filter-to').value = '';
+                    renderAdminSalesHistory();
+                }
+            }
+
+            function setNextMonth(isDashboard) {
+                if (isDashboard) {
+                    const val = getMonthOffset('dash-filter-month', +1);
+                    document.getElementById('dash-filter-month').value = val;
+                    document.getElementById('dash-filter-from').value = '';
+                    document.getElementById('dash-filter-to').value = '';
+                    renderDashboard(true);
+                } else {
+                    const val = getMonthOffset('sh-filter-month', +1);
+                    document.getElementById('sh-filter-month').value = val;
                     document.getElementById('sh-filter-from').value = '';
                     document.getElementById('sh-filter-to').value = '';
                     renderAdminSalesHistory();
